@@ -1,4 +1,5 @@
 Loopit – System Architecture
+![Loopit Architecture](architecture.png)
 
 1. Architecture Overview
 
