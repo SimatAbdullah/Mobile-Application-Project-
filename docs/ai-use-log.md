@@ -3,6 +3,7 @@ AI use log.id
 
 | Stage / Week | Tool | Where used | Purpose, and what we did with the output |
 |---|---|---|---|
+| Stage 1, wk 7 | Lovable | UI prototype | Used Lovable to generate the initial Loopit UI prototype. |
 | Stage 2, Wk 10 | Claude | GitHub Issues | We divided the Milestone 2 tasks ourselves. We asked for help wording the issue titles and descriptions and for steps to create them. We created the issues on GitHub and set the owners according to our own split. |
 | Stage 2, Wk 10 | Claude | README.md | We asked for help with the wording of the app description.|
 | Stage 2, Wk 10 | Claude | Pull request workflow | We asked how pull requests, reviews and merges work on GitHub, then did them ourselves. |
