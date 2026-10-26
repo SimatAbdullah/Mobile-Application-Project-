@@ -1,0 +1,20 @@
+# Loopit — Jetpack Components and Libraries
+
+This document contains the planned libraries for Loopit, matching section B3 of the Milestone 2 — Stage 2 report.
+
+| Library | Used for | Why we chose it |
+| --- | --- | --- |
+| Jetpack Compose + Material 3 | Building Loopit screens, forms, cards, checklists, navigation bars, and shared themes. | Supports reusable UI components and consistent styling. State-based updates allow checklist progress, recycling history, and points to update when their underlying state changes. |
+| Navigation Compose | Managing authentication screens, bottom navigation, and the recycling journey. | Provides navigation and back-stack management within the Compose app. Passing device and collection-point IDs keeps navigation consistent with the routes defined in A4. |
+| Lifecycle ViewModel Compose + Lifecycle Runtime Compose | Managing screen state and observing ViewModel StateFlow values. | Keeps screen logic separate from composables and retains ViewModel state during configuration changes. Lifecycle-aware collection updates visible screens without unnecessarily collecting flows in the background. |
+| Kotlin Coroutines + Flow | Loading local content, handling asynchronous operations, and exposing changing UI state. | Allows repository operations to run without blocking the UI when dispatched appropriately. StateFlow provides a consistent stream of loading, success, and error states for Loopit screens. |
+| Kotlinx Serialization - JSON | Converting bundled device categories, disposal guidance, checklists, and collection-point JSON into Kotlin data objects. | Fits the planned JsonContentDataSource and keeps reference content separate from screen code. Bundled content can be read without requiring a network request. |
+| Jetpack Preferences DataStore | Implementing DraftStorageDataSource for small draft values, such as the selected device ID and checklist progress. | Preserves lightweight progress between app sessions using asynchronous storage. Its key-value approach fits these small values without requiring relational tables. |
+| Firebase Authentication | Account registration, email/password login, password reset, and sign-out. | Matches the planned FirebaseAuthDataSource and centralizes authentication through one service, reducing the need to build a custom authentication backend. |
+| Cloud Firestore | Storing user-linked recycling activities and retrieving recycling history through FirestoreActivityDataSource. | Supports persistent cloud records and queries for each user’s activity. Cached data and offline persistence can support access to previously loaded history during connectivity interruptions. |
+| Google Maps Compose | Displaying collection-point locations and selectable markers on the map. | Integrates map components with Compose. It can display coordinates from the selected Saudi dataset while allowing users to select a point and open its details. |
+| Google Play Services Location | Obtaining the user’s location through the planned LocationService, after permission is granted. | Supplies location coordinates that Loopit can use to calculate distances and prioritize nearby collection points. Collection-point information remains sourced from the project’s dataset. |
+| CameraX | Capturing a device photograph from the Identify Device screen. | Supports an in-app camera capture flow that can be connected to the device-identification process. It handles photo capture; classification requires a separately defined recognition method. |
+| JUnit + Kotlin Coroutines Test | Testing use cases and asynchronous ViewModel state changes with fake repositories. | Enables repeatable tests for checklist completion, activity validation, and loading/error states without depending on live Firebase services. |
+| Compose UI Test | Testing screen interactions and visible results. | Can verify that incomplete checklists disable Continue, validation messages appear, and navigation actions display the expected screen. It checks the Compose UI through its semantics. |
+
