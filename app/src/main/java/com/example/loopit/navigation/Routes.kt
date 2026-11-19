@@ -1,4 +1,3 @@
-
 package com.example.loopit.navigation
 
 object Routes {
@@ -6,7 +5,12 @@ object Routes {
     const val CREATE_ACCOUNT = "create_account"
     const val FORGOT_PASSWORD = "forgot_password"
 
-    const val HOME = "home"
+    const val HOME = "home/{userName}/{recycledCount}"
+    fun homeRoute(userName: String, recycledCount: Int): String {
+        val safeName = userName.ifBlank { "User" }
+        return "home/$safeName/$recycledCount"
+    }
+
     const val YOUR_IMPACT = "your_impact"
     const val PROFILE = "profile"
 
