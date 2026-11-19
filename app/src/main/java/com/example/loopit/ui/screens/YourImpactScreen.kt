@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -33,39 +32,37 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-data class MonthlyDeviceStat(
+data class MonthlyActivityStat(
     val month: String,
-    val count: Int,
-    val isHighlighted: Boolean = false
+    val count: Int
 )
 
-data class CategoryStat(
+data class RecycledCategoryStat(
     val badge: String,
     val name: String,
     val count: Int
 )
 
 data class YourImpactUiState(
-    val periodLabel: String = "6 months",
     val devicesRecycled: Int = 0,
     val pointsEarned: Int = 0,
-    val monthlyStats: List<MonthlyDeviceStat> = listOf(
-        MonthlyDeviceStat("May", 0),
-        MonthlyDeviceStat("Jun", 0),
-        MonthlyDeviceStat("Jul", 0),
-        MonthlyDeviceStat("Aug", 0),
-        MonthlyDeviceStat("Sep", 0),
-        MonthlyDeviceStat("Oct", 0, isHighlighted = true)
+    val monthlyActivity: List<MonthlyActivityStat> = listOf(
+        MonthlyActivityStat("May", 0),
+        MonthlyActivityStat("Jun", 0),
+        MonthlyActivityStat("Jul", 0),
+        MonthlyActivityStat("Aug", 0),
+        MonthlyActivityStat("Sep", 0),
+        MonthlyActivityStat("Oct", 0)
     ),
-    val categoryStats: List<CategoryStat> = listOf(
-        CategoryStat("PH", "Phones", 0),
-        CategoryStat("LP", "Laptops", 0),
-        CategoryStat("BT", "Batteries", 0)
+    val recycledCategories: List<RecycledCategoryStat> = listOf(
+        RecycledCategoryStat("SP", "Smartphone", 0),
+        RecycledCategoryStat("CH", "Charger", 0),
+        RecycledCategoryStat("LP", "Laptop", 0),
+        RecycledCategoryStat("AC", "Accessories", 0)
     )
 )
 
 private val PurplePrimary = Color(0xFF6B3CE9)
-private val PurpleDark = Color(0xFF5328C7)
 private val PurpleLightBg = Color(0xFFF3EFFE)
 private val PurpleSoftBar = Color(0xFFE7E2FA)
 private val TextDark = Color(0xFF1A1A2E)
@@ -76,21 +73,11 @@ private val BackgroundGray = Color(0xFFFAFAFC)
 fun YourImpactRoute(
     uiState: YourImpactUiState = YourImpactUiState(),
     onBackClick: () -> Unit = {},
-    onHomeTabClick: () -> Unit = {},
-    onMapTabClick: () -> Unit = {},
-    onScanTabClick: () -> Unit = {},
-    onRewardsTabClick: () -> Unit = {},
-    onProfileTabClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     YourImpactScreen(
         uiState = uiState,
         onBackClick = onBackClick,
-        onHomeTabClick = onHomeTabClick,
-        onMapTabClick = onMapTabClick,
-        onScanTabClick = onScanTabClick,
-        onRewardsTabClick = onRewardsTabClick,
-        onProfileTabClick = onProfileTabClick,
         modifier = modifier
     )
 }
@@ -99,28 +86,13 @@ fun YourImpactRoute(
 fun YourImpactScreen(
     uiState: YourImpactUiState,
     onBackClick: () -> Unit,
-    onHomeTabClick: () -> Unit,
-    onMapTabClick: () -> Unit,
-    onScanTabClick: () -> Unit,
-    onRewardsTabClick: () -> Unit,
-    onProfileTabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val maxMonthCount = (uiState.monthlyStats.maxOfOrNull { it.count } ?: 1).coerceAtLeast(1)
-    val totalCategoryCount = uiState.categoryStats.sumOf { it.count }.coerceAtLeast(1)
+    val maxMonthCount = (uiState.monthlyActivity.maxOfOrNull { it.count } ?: 1).coerceAtLeast(1)
+    val totalCategoryCount = uiState.recycledCategories.sumOf { it.count }.coerceAtLeast(1)
 
     Scaffold(
         containerColor = BackgroundGray,
-        bottomBar = {
-            LoopitBottomBar(
-                selectedTab = "Profile",
-                onHomeClick = onHomeTabClick,
-                onMapClick = onMapTabClick,
-                onScanClick = onScanTabClick,
-                onRewardsClick = onRewardsTabClick,
-                onProfileClick = onProfileTabClick
-            )
-        },
         modifier = modifier
     ) { innerPadding ->
         Column(
@@ -129,76 +101,48 @@ fun YourImpactScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // الشريط العلوي
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .clickable { onBackClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "<",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextDark
-                        )
-                    }
-                    Text(
-                        text = "Statistics",
-                        fontSize = 19.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
-                }
-
-                Box(
+                Text(
+                    text = "←",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark,
                     modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Color(0xFFEDEDF2))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    Text(
-                        text = uiState.periodLabel,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = TextDark
-                    )
-                }
+                        .clickable { onBackClick() }
+                        .padding(4.dp)
+                )
+                Text(
+                    text = "Your Impact",
+                    fontSize = 19.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
             }
 
             // بطاقتا الإحصائيات السريعة
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatSummaryCard(
-                    title = "Devices recycled",
+                ImpactMetricCard(
                     value = "${uiState.devicesRecycled}",
-                    valueColor = TextDark,
+                    label = "Devices recycled",
                     modifier = Modifier.weight(1f)
                 )
-                StatSummaryCard(
-                    title = "Points earned",
+                ImpactMetricCard(
                     value = "${uiState.pointsEarned}",
-                    valueColor = PurplePrimary,
+                    label = "Points earned",
                     modifier = Modifier.weight(1f)
                 )
             }
 
-            // بطاقة الرسم البياني الشهري
+            // بطاقة Recycling Activity
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -208,28 +152,48 @@ fun YourImpactScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text(
-                        text = "Devices per month",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(PurpleLightBg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "||",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = PurplePrimary
+                            )
+                        }
+                        Text(
+                            text = "Recycling Activity",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
+                        )
+                    }
 
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(125.dp),
+                            .height(110.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.Bottom
                     ) {
-                        uiState.monthlyStats.forEach { stat ->
-                            val fraction = if (uiState.devicesRecycled == 0 || stat.count == 0) {
-                                0.08f
+                        uiState.monthlyActivity.forEach { stat ->
+                            val hasActivity = stat.count > 0 && uiState.devicesRecycled > 0
+                            val fraction = if (!hasActivity) {
+                                0.05f
                             } else {
-                                (stat.count.toFloat() / maxMonthCount.toFloat()).coerceIn(0.15f, 1f)
+                                (stat.count.toFloat() / maxMonthCount.toFloat()).coerceIn(0.2f, 1f)
                             }
 
                             Column(
@@ -239,23 +203,16 @@ fun YourImpactScreen(
                             ) {
                                 Box(
                                     modifier = Modifier
-                                        .width(28.dp)
-                                        .height((95 * fraction).dp)
-                                        .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp))
-                                        .background(
-                                            if (stat.isHighlighted && stat.count > 0) {
-                                                Brush.verticalGradient(listOf(PurplePrimary, PurpleDark))
-                                            } else {
-                                                Brush.verticalGradient(listOf(PurpleSoftBar, PurpleSoftBar))
-                                            }
-                                        )
+                                        .width(18.dp)
+                                        .height((82 * fraction).dp)
+                                        .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
+                                        .background(if (hasActivity) PurplePrimary else PurpleSoftBar)
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
                                     text = stat.month,
                                     fontSize = 11.sp,
-                                    color = if (stat.isHighlighted) TextDark else TextMuted,
-                                    fontWeight = if (stat.isHighlighted) FontWeight.Bold else FontWeight.Normal
+                                    color = TextMuted
                                 )
                             }
                         }
@@ -263,7 +220,7 @@ fun YourImpactScreen(
                 }
             }
 
-            // بطاقة التصنيف حسب الفئة
+            // بطاقة Recycled Categories
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(18.dp),
@@ -273,21 +230,22 @@ fun YourImpactScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "By category",
+                        text = "Recycled Categories",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextDark
                     )
 
-                    uiState.categoryStats.forEach { category ->
+                    uiState.recycledCategories.forEach { category ->
+                        val actualCount = if (uiState.devicesRecycled == 0) 0 else category.count
                         val progress = if (uiState.devicesRecycled == 0) {
                             0f
                         } else {
-                            (category.count.toFloat() / totalCategoryCount.toFloat()).coerceIn(0f, 1f)
+                            (actualCount.toFloat() / totalCategoryCount.toFloat()).coerceIn(0f, 1f)
                         }
 
                         Row(
@@ -297,8 +255,8 @@ fun YourImpactScreen(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .size(26.dp)
+                                    .clip(RoundedCornerShape(7.dp))
                                     .background(PurpleLightBg),
                                 contentAlignment = Alignment.Center
                             ) {
@@ -314,7 +272,7 @@ fun YourImpactScreen(
                                 text = category.name,
                                 fontSize = 13.sp,
                                 color = TextDark,
-                                modifier = Modifier.width(68.dp)
+                                modifier = Modifier.width(86.dp)
                             )
 
                             Box(
@@ -336,10 +294,10 @@ fun YourImpactScreen(
                             }
 
                             Text(
-                                text = "${category.count}",
+                                text = "$actualCount",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = TextMuted,
+                                color = TextDark,
                                 textAlign = TextAlign.End,
                                 modifier = Modifier.width(20.dp)
                             )
@@ -348,24 +306,66 @@ fun YourImpactScreen(
                 }
             }
 
-            Text(
-                text = "Based on recycling you've recorded.",
-                fontSize = 12.sp,
-                color = TextMuted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 2.dp)
-            )
+            // بطاقة Your Environmental Impact السفلية
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = PurpleLightBg),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(18.dp)
+                                .clip(CircleShape)
+                                .background(PurplePrimary.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "✦",
+                                fontSize = 10.sp,
+                                color = PurplePrimary
+                            )
+                        }
+                        Text(
+                            text = "Your Environmental Impact",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PurplePrimary
+                        )
+                    }
+
+                    Text(
+                        text = "${uiState.devicesRecycled} electronic devices responsibly recycled",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
+
+                    Text(
+                        text = "Keep recycling to make a bigger impact.",
+                        fontSize = 12.sp,
+                        color = TextMuted
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun StatSummaryCard(
-    title: String,
+private fun ImpactMetricCard(
     value: String,
-    valueColor: Color,
+    label: String,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -378,18 +378,18 @@ private fun StatSummaryCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = title,
-                fontSize = 12.sp,
-                color = TextMuted
+                text = value,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = TextDark
             )
             Text(
-                text = value,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.ExtraBold,
-                color = valueColor
+                text = label,
+                fontSize = 12.sp,
+                color = TextMuted
             )
         }
     }
@@ -399,12 +399,10 @@ private fun StatSummaryCard(
 @Composable
 fun YourImpactScreenPreview() {
     YourImpactScreen(
-        uiState = YourImpactUiState(devicesRecycled = 0, pointsEarned = 0),
-        onBackClick = {},
-        onHomeTabClick = {},
-        onMapTabClick = {},
-        onScanTabClick = {},
-        onRewardsTabClick = {},
-        onProfileTabClick = {}
+        uiState = YourImpactUiState(
+            devicesRecycled = 0,
+            pointsEarned = 0
+        ),
+        onBackClick = {}
     )
 }

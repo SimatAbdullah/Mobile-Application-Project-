@@ -1,5 +1,6 @@
 package com.example.loopit.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,9 +12,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,8 +31,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -40,7 +49,7 @@ import androidx.compose.ui.unit.sp
 data class HomeUiState(
     val userName: String = "",
     val recycledDevicesCount: Int = 0,
-    val recyclingTip: String = "Remove batteries where possible and keep them separate — they often need a different disposal route."
+    val pointsEarned: Int = 0
 )
 
 private val PurplePrimary = Color(0xFF6B3CE9)
@@ -54,30 +63,28 @@ private val BackgroundGray = Color(0xFFFAFAFC)
 
 @Composable
 fun HomeRoute(
+    modifier: Modifier = Modifier,
     uiState: HomeUiState = HomeUiState(),
     onNotificationsClick: () -> Unit = {},
-    onRecordRecyclingClick: () -> Unit = {},
-    onIdentifyClick: () -> Unit = {},
-    onPointsClick: () -> Unit = {},
-    onRewardsClick: () -> Unit = {},
-    onChecklistClick: () -> Unit = {},
+    onIdentifyDeviceClick: () -> Unit = {},
+    onFindCollectionPointsClick: () -> Unit = {},
     onViewStatisticsClick: () -> Unit = {},
+    onEnvironmentalImpactClick: () -> Unit = {},
+    onHomeTabClick: () -> Unit = {},
     onMapTabClick: () -> Unit = {},
-    onScanTabClick: () -> Unit = {},
-    onProfileTabClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onRewardsTabClick: () -> Unit = {},
+    onProfileTabClick: () -> Unit = {}
 ) {
     HomeScreen(
         uiState = uiState,
         onNotificationsClick = onNotificationsClick,
-        onRecordRecyclingClick = onRecordRecyclingClick,
-        onIdentifyClick = onIdentifyClick,
-        onPointsClick = onPointsClick,
-        onRewardsClick = onRewardsClick,
-        onChecklistClick = onChecklistClick,
+        onIdentifyDeviceClick = onIdentifyDeviceClick,
+        onFindCollectionPointsClick = onFindCollectionPointsClick,
         onViewStatisticsClick = onViewStatisticsClick,
+        onEnvironmentalImpactClick = onEnvironmentalImpactClick,
+        onHomeTabClick = onHomeTabClick,
         onMapTabClick = onMapTabClick,
-        onScanTabClick = onScanTabClick,
+        onRewardsTabClick = onRewardsTabClick,
         onProfileTabClick = onProfileTabClick,
         modifier = modifier
     )
@@ -87,26 +94,26 @@ fun HomeRoute(
 fun HomeScreen(
     uiState: HomeUiState,
     onNotificationsClick: () -> Unit,
-    onRecordRecyclingClick: () -> Unit,
-    onIdentifyClick: () -> Unit,
-    onPointsClick: () -> Unit,
-    onRewardsClick: () -> Unit,
-    onChecklistClick: () -> Unit,
+    onIdentifyDeviceClick: () -> Unit,
+    onFindCollectionPointsClick: () -> Unit,
     onViewStatisticsClick: () -> Unit,
+    onEnvironmentalImpactClick: () -> Unit,
+    onHomeTabClick: () -> Unit,
     onMapTabClick: () -> Unit,
-    onScanTabClick: () -> Unit,
+    onRewardsTabClick: () -> Unit,
     onProfileTabClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val greetingText = if (uiState.userName.isBlank()) "Hi" else "Hi, ${uiState.userName}"
+
     Scaffold(
         containerColor = BackgroundGray,
         bottomBar = {
             LoopitBottomBar(
                 selectedTab = "Home",
-                onHomeClick = {},
+                onHomeClick = onHomeTabClick,
                 onMapClick = onMapTabClick,
-                onScanClick = onScanTabClick,
-                onRewardsClick = onRewardsClick,
+                onRewardsClick = onRewardsTabClick,
                 onProfileClick = onProfileTabClick
             )
         },
@@ -118,49 +125,70 @@ fun HomeScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(PurpleLightBg),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "∞",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = PurplePrimary
+                        )
+                    }
                     Text(
-                        text = "Good morning",
-                        fontSize = 13.sp,
-                        color = TextMuted
-                    )
-                    Text(
-                        text = if (uiState.userName.isBlank()) "Hi" else "Hi, ${uiState.userName}",
-                        fontSize = 22.sp,
+                        text = "Loopit",
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextDark
+                        color = PurplePrimary
                     )
                 }
 
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(38.dp)
                         .shadow(2.dp, CircleShape)
                         .clip(CircleShape)
                         .background(Color.White)
                         .clickable { onNotificationsClick() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "!",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
+                    BellShape(color = TextDark, modifier = Modifier.size(18.dp))
                 }
+            }
+
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = greetingText,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                Text(
+                    text = "Every device recycled keeps resources in the loop.",
+                    fontSize = 13.sp,
+                    color = TextMuted
+                )
             }
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
+                    .clip(RoundedCornerShape(22.dp))
                     .background(
                         brush = Brush.linearGradient(
                             colors = listOf(PurplePrimary, PurpleDark)
@@ -168,72 +196,55 @@ fun HomeScreen(
                     )
                     .padding(20.dp)
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White.copy(alpha = 0.18f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CameraShape(color = Color.White, modifier = Modifier.size(20.dp))
+                    }
+
                     Text(
-                        text = "Your recycled devices",
-                        fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
-                    Text(
-                        text = "${uiState.recycledDevicesCount}",
-                        fontSize = 36.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        text = "Identify a Device",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
+
                     Text(
-                        text = "Keep the loop going — record your next drop-off.",
+                        text = "Scan or select your electronics to get safe recycling guidance.",
                         fontSize = 13.sp,
-                        color = Color.White.copy(alpha = 0.9f)
+                        color = Color.White.copy(alpha = 0.9f),
+                        lineHeight = 18.sp
                     )
-                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
                     Button(
-                        onClick = onRecordRecyclingClick,
+                        onClick = onIdentifyDeviceClick,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.White,
                             contentColor = PurplePrimary
                         ),
                         shape = RoundedCornerShape(50),
-                        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 10.dp)
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 10.dp)
                     ) {
                         Text(
-                            text = "Record recycling",
+                            text = "Get started  →",
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
+                            fontSize = 13.sp
                         )
                     }
                 }
             }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                QuickActionItem(
-                    badgeText = "ID",
-                    label = "Identify",
-                    onClick = onIdentifyClick
-                )
-                QuickActionItem(
-                    badgeText = "PT",
-                    label = "Points",
-                    onClick = onPointsClick
-                )
-                QuickActionItem(
-                    badgeText = "+",
-                    label = "Record",
-                    onClick = onRecordRecyclingClick
-                )
-                QuickActionItem(
-                    badgeText = "★",
-                    label = "Rewards",
-                    onClick = onRewardsClick
-                )
-            }
-
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onChecklistClick() },
+                    .clickable { onFindCollectionPointsClick() },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = Color.White),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -241,43 +252,39 @@ fun HomeScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
                         modifier = Modifier.weight(1f)
                     ) {
                         Box(
                             modifier = Modifier
-                                .size(42.dp)
+                                .size(38.dp)
                                 .clip(CircleShape)
-                                .background(GreenLightBg),
+                                .background(PurpleLightBg),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "✓",
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = GreenIcon
-                            )
+                            PinShape(color = PurplePrimary, modifier = Modifier.size(18.dp))
                         }
-                        Column {
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = "Before you drop off",
+                                text = "Find Collection Points",
+                                fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 15.sp,
                                 color = TextDark
                             )
                             Text(
-                                text = "Back up and wipe your personal data.",
+                                text = "E-waste drop-offs near you",
                                 fontSize = 12.sp,
                                 color = TextMuted
                             )
                         }
                     }
+
                     Text(
                         text = ">",
                         fontSize = 18.sp,
@@ -288,101 +295,266 @@ fun HomeScreen(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(
-                    text = "Recycling tip",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = TextDark
-                )
-
-                Card(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
+                    Text(
+                        text = "Your Progress",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextDark
+                    )
+                    Text(
+                        text = "View Statistics",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = PurplePrimary,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            .clickable { onViewStatisticsClick() }
+                            .padding(vertical = 2.dp)
+                    )
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                     ) {
-                        Box(
+                        Column(
                             modifier = Modifier
-                                .size(38.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(PurpleLightBg),
-                            contentAlignment = Alignment.Center
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(GreenLightBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "♻",
+                                    fontSize = 13.sp,
+                                    color = GreenIcon
+                                )
+                            }
                             Text(
-                                text = "i",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = PurplePrimary
+                                text = uiState.recycledDevicesCount.toString(),
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextDark
+                            )
+                            Text(
+                                text = "Devices recycled",
+                                fontSize = 12.sp,
+                                color = TextMuted
                             )
                         }
-                        Text(
-                            text = uiState.recyclingTip,
-                            fontSize = 12.sp,
-                            color = TextMuted,
-                            lineHeight = 18.sp,
-                            modifier = Modifier.weight(1f)
-                        )
+                    }
+
+                    Card(
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(PurpleLightBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "★",
+                                    fontSize = 13.sp,
+                                    color = PurplePrimary
+                                )
+                            }
+                            Text(
+                                text = uiState.pointsEarned.toString(),
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextDark
+                            )
+                            Text(
+                                text = "Points earned",
+                                fontSize = 12.sp,
+                                color = TextMuted
+                            )
+                        }
                     }
                 }
             }
 
-            Box(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 4.dp),
-                contentAlignment = Alignment.Center
+                    .clickable { onEnvironmentalImpactClick() },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text(
-                    text = "View statistics →",
-                    color = PurplePrimary,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                Row(
                     modifier = Modifier
-                        .clickable { onViewStatisticsClick() }
-                        .padding(8.dp)
-                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(GreenLightBg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            LeafShape(color = GreenIcon, modifier = Modifier.size(16.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "See your environmental impact",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextDark
+                        )
+                    }
+
+                    Text(
+                        text = ">",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextMuted
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-private fun QuickActionItem(
-    badgeText: String,
-    label: String,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier.clickable { onClick() }
-    ) {
-        Box(
-            modifier = Modifier
-                .size(54.dp)
-                .clip(CircleShape)
-                .background(PurpleLightBg),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = badgeText,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = PurplePrimary
-            )
+private fun BellShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(w * 0.5f, h * 0.14f)
+            quadraticTo(w * 0.22f, h * 0.22f, w * 0.22f, h * 0.52f)
+            lineTo(w * 0.14f, h * 0.72f)
+            lineTo(w * 0.86f, h * 0.72f)
+            lineTo(w * 0.78f, h * 0.52f)
+            quadraticTo(w * 0.78f, h * 0.22f, w * 0.5f, h * 0.14f)
+            close()
         }
-        Text(
-            text = label,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Medium,
-            color = TextDark
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = 1.8.dp.toPx(), join = StrokeJoin.Round)
+        )
+        drawArc(
+            color = color,
+            startAngle = 0f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(w * 0.38f, h * 0.72f),
+            size = Size(w * 0.24f, h * 0.16f),
+            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+        )
+    }
+}
+
+@Composable
+private fun CameraShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(w * 0.1f, h * 0.26f),
+            size = Size(w * 0.8f, h * 0.54f),
+            cornerRadius = CornerRadius(3.dp.toPx(), 3.dp.toPx()),
+            style = Stroke(width = 1.8.dp.toPx())
+        )
+        drawCircle(
+            color = color,
+            radius = w * 0.16f,
+            center = Offset(w * 0.5f, h * 0.53f),
+            style = Stroke(width = 1.8.dp.toPx())
+        )
+    }
+}
+
+@Composable
+private fun PinShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(w * 0.5f, h * 0.88f)
+            quadraticTo(w * 0.18f, h * 0.55f, w * 0.22f, h * 0.34f)
+            arcTo(
+                rect = Rect(w * 0.22f, h * 0.12f, w * 0.78f, h * 0.56f),
+                startAngleDegrees = 180f,
+                sweepAngleDegrees = 180f,
+                forceMoveTo = false
+            )
+            quadraticTo(w * 0.82f, h * 0.55f, w * 0.5f, h * 0.88f)
+            close()
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = 1.8.dp.toPx(), join = StrokeJoin.Round)
+        )
+        drawCircle(
+            color = color,
+            radius = w * 0.11f,
+            center = Offset(w * 0.5f, h * 0.34f),
+            style = Stroke(width = 1.6.dp.toPx())
+        )
+    }
+}
+
+@Composable
+private fun LeafShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val path = Path().apply {
+            moveTo(w * 0.2f, h * 0.8f)
+            quadraticTo(w * 0.18f, h * 0.22f, w * 0.82f, h * 0.2f)
+            quadraticTo(w * 0.78f, h * 0.82f, w * 0.2f, h * 0.8f)
+            close()
+        }
+        drawPath(
+            path = path,
+            color = color,
+            style = Stroke(width = 1.8.dp.toPx(), join = StrokeJoin.Round)
+        )
+        drawLine(
+            color = color,
+            start = Offset(w * 0.24f, h * 0.76f),
+            end = Offset(w * 0.68f, h * 0.34f),
+            strokeWidth = 1.6.dp.toPx(),
+            cap = StrokeCap.Round
         )
     }
 }
@@ -392,7 +564,6 @@ fun LoopitBottomBar(
     selectedTab: String,
     onHomeClick: () -> Unit,
     onMapClick: () -> Unit,
-    onScanClick: () -> Unit,
     onRewardsClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
@@ -403,7 +574,7 @@ fun LoopitBottomBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 12.dp),
+                .padding(vertical = 10.dp, horizontal = 12.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -417,37 +588,6 @@ fun LoopitBottomBar(
                 isSelected = selectedTab == "Map",
                 onClick = onMapClick
             )
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .offset(y = (-8).dp)
-                    .clickable { onScanClick() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .shadow(4.dp, CircleShape)
-                        .clip(CircleShape)
-                        .background(PurplePrimary),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "SCAN",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = "Scan",
-                    fontSize = 11.sp,
-                    color = if (selectedTab == "Scan") PurplePrimary else TextMuted,
-                    fontWeight = FontWeight.Medium
-                )
-            }
-
             BottomNavItem(
                 label = "Rewards",
                 isSelected = selectedTab == "Rewards",
@@ -471,11 +611,17 @@ private fun BottomNavItem(
     val color = if (isSelected) PurplePrimary else TextMuted
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(3.dp),
         modifier = Modifier
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
+        when (label) {
+            "Home" -> HomeTabShape(color = color, modifier = Modifier.size(18.dp))
+            "Map" -> PinShape(color = color, modifier = Modifier.size(18.dp))
+            "Rewards" -> RewardTabShape(color = color, modifier = Modifier.size(18.dp))
+            else -> ProfileTabShape(color = color, modifier = Modifier.size(18.dp))
+        }
         Text(
             text = label,
             fontSize = 12.sp,
@@ -485,20 +631,95 @@ private fun BottomNavItem(
     }
 }
 
+@Composable
+private fun HomeTabShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val roof = Path().apply {
+            moveTo(w * 0.15f, h * 0.48f)
+            lineTo(w * 0.5f, h * 0.18f)
+            lineTo(w * 0.85f, h * 0.48f)
+        }
+        drawPath(
+            path = roof,
+            color = color,
+            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+        drawRect(
+            color = color,
+            topLeft = Offset(w * 0.25f, h * 0.48f),
+            size = Size(w * 0.5f, h * 0.36f),
+            style = Stroke(width = 1.8.dp.toPx())
+        )
+    }
+}
+
+@Composable
+private fun RewardTabShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        drawCircle(
+            color = color,
+            radius = w * 0.28f,
+            center = Offset(w * 0.5f, h * 0.38f),
+            style = Stroke(width = 1.8.dp.toPx())
+        )
+        val ribbon = Path().apply {
+            moveTo(w * 0.36f, h * 0.62f)
+            lineTo(w * 0.28f, h * 0.88f)
+            moveTo(w * 0.64f, h * 0.62f)
+            lineTo(w * 0.72f, h * 0.88f)
+        }
+        drawPath(
+            path = ribbon,
+            color = color,
+            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+        )
+    }
+}
+
+@Composable
+private fun ProfileTabShape(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        drawCircle(
+            color = color,
+            radius = w * 0.18f,
+            center = Offset(w * 0.5f, h * 0.32f),
+            style = Stroke(width = 1.8.dp.toPx())
+        )
+        drawArc(
+            color = color,
+            startAngle = 180f,
+            sweepAngle = 180f,
+            useCenter = false,
+            topLeft = Offset(w * 0.22f, h * 0.54f),
+            size = Size(w * 0.56f, h * 0.32f),
+            style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round)
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
     HomeScreen(
-        uiState = HomeUiState(userName = "Preview", recycledDevicesCount = 0),
+        uiState = HomeUiState(
+            userName = "User",
+            recycledDevicesCount = 0,
+            pointsEarned = 0
+        ),
         onNotificationsClick = {},
-        onRecordRecyclingClick = {},
-        onIdentifyClick = {},
-        onPointsClick = {},
-        onRewardsClick = {},
-        onChecklistClick = {},
+        onIdentifyDeviceClick = {},
+        onFindCollectionPointsClick = {},
         onViewStatisticsClick = {},
+        onEnvironmentalImpactClick = {},
+        onHomeTabClick = {},
         onMapTabClick = {},
-        onScanTabClick = {},
+        onRewardsTabClick = {},
         onProfileTabClick = {}
     )
 }
