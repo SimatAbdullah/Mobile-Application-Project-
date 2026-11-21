@@ -1,3 +1,4 @@
+
 package com.example.loopit.ui.screens
 
 import androidx.compose.foundation.background
@@ -23,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -63,7 +65,9 @@ fun ProfileRoute(
     onStatisticsClick: () -> Unit = {},
     onRecyclingHistoryClick: () -> Unit = {},
     onRewardsClick: () -> Unit = {},
-    onAccessibilityClick: () -> Unit = {},
+    onEditProfileClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
+    onAccountSettingsClick: () -> Unit = {},
     onConfirmLogoutClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -76,7 +80,9 @@ fun ProfileRoute(
         onStatisticsClick = onStatisticsClick,
         onRecyclingHistoryClick = onRecyclingHistoryClick,
         onRewardsClick = onRewardsClick,
-        onAccessibilityClick = onAccessibilityClick,
+        onEditProfileClick = onEditProfileClick,
+        onNotificationsClick = onNotificationsClick,
+        onAccountSettingsClick = onAccountSettingsClick,
         onConfirmLogoutClick = onConfirmLogoutClick,
         modifier = modifier
     )
@@ -92,7 +98,9 @@ fun ProfileScreen(
     onStatisticsClick: () -> Unit,
     onRecyclingHistoryClick: () -> Unit,
     onRewardsClick: () -> Unit,
-    onAccessibilityClick: () -> Unit,
+    onEditProfileClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onAccountSettingsClick: () -> Unit,
     onConfirmLogoutClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -100,6 +108,21 @@ fun ProfileScreen(
 
     val displayName = uiState.fullName.ifBlank { "User" }
     val displayEmail = uiState.email.ifBlank { "No email" }
+
+    val initials = displayName
+        .trim()
+        .split(Regex("\\s+"))
+        .filter { it.isNotBlank() }
+        .let { parts ->
+            when {
+                parts.isEmpty() -> "U"
+                parts.size == 1 -> parts[0].take(2).uppercase()
+                else -> (
+                        parts.first().take(1) +
+                                parts.last().take(1)
+                        ).uppercase()
+            }
+        }
 
     Scaffold(
         containerColor = BackgroundGray,
@@ -115,42 +138,48 @@ fun ProfileScreen(
         },
         modifier = modifier
     ) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp, vertical = 16.dp),
+                .padding(
+                    horizontal = 20.dp,
+                    vertical = 16.dp
+                ),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+
+            // Page title
             Text(
                 text = "Profile",
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDark,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // صورة البروفايل الدائرية
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Profile avatar
             Box(
                 modifier = Modifier
-                    .size(76.dp)
+                    .size(88.dp)
                     .clip(CircleShape)
                     .background(PurpleLightBg),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = displayName.take(1).uppercase(),
+                    text = initials,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = PurplePrimary
                 )
             }
 
-            // الاسم والإيميل والإحصائيات الحقيقية للحساب
+            // User information
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -161,60 +190,145 @@ fun ProfileScreen(
                     fontWeight = FontWeight.Bold,
                     color = TextDark
                 )
+
                 Text(
-                    text = displayEmail,
+                    text = "✉  $displayEmail",
                     fontSize = 13.sp,
                     color = TextMuted
                 )
-                Text(
-                    text = "${uiState.recycledDevicesCount} recycled devices · ${uiState.pointsCount} points",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = PurplePrimary
+            }
+
+            // Statistics cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                ProfileStatCard(
+                    value = uiState.recycledDevicesCount.toString(),
+                    label = "Devices recycled",
+                    modifier = Modifier.weight(1f)
+                )
+
+                ProfileStatCard(
+                    value = uiState.pointsCount.toString(),
+                    label = "Points",
+                    modifier = Modifier.weight(1f)
                 )
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            // Profile options matching the approved design
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 2.dp
+                )
+            ) {
+                Column {
 
-            ProfileMenuCard(
-                badge = "ST",
-                title = "Statistics",
-                subtitle = "Track your impact",
-                onClick = onStatisticsClick
-            )
+                    ProfileMenuItem(
+                        symbol = "◷",
+                        title = "Recycling History",
+                        onClick = onRecyclingHistoryClick
+                    )
 
-            ProfileMenuCard(
-                badge = "RH",
-                title = "Recycling History",
-                subtitle = "View previous drop-offs",
-                onClick = onRecyclingHistoryClick
-            )
+                    HorizontalDivider(
+                        color = Color(0xFFEDEDF2)
+                    )
 
-            ProfileMenuCard(
-                badge = "RW",
-                title = "Rewards",
-                subtitle = "Points and badges",
-                onClick = onRewardsClick
-            )
+                    ProfileMenuItem(
+                        symbol = "▥",
+                        title = "Your Impact",
+                        onClick = onStatisticsClick
+                    )
 
-            ProfileMenuCard(
-                badge = "AC",
-                title = "Accessibility Settings",
-                subtitle = "Text size, contrast and more",
-                onClick = onAccessibilityClick
-            )
+                    HorizontalDivider(
+                        color = Color(0xFFEDEDF2)
+                    )
 
-            ProfileMenuCard(
-                badge = "->",
-                title = "Log out",
-                subtitle = "Return to sign-in",
-                onClick = { showLogoutDialog = true }
-            )
+                    ProfileMenuItem(
+                        symbol = "★",
+                        title = "Rewards",
+                        onClick = onRewardsClick
+                    )
+
+                    HorizontalDivider(
+                        color = Color(0xFFEDEDF2)
+                    )
+
+                    // Dalia's existing screen
+                    ProfileMenuItem(
+                        symbol = "✎",
+                        title = "Edit Profile",
+                        onClick = onEditProfileClick
+                    )
+
+                    HorizontalDivider(
+                        color = Color(0xFFEDEDF2)
+                    )
+
+                    // Navigation will be connected later
+                    ProfileMenuItem(
+                        symbol = "♧",
+                        title = "Notifications",
+                        onClick = onNotificationsClick
+                    )
+
+                    HorizontalDivider(
+                        color = Color(0xFFEDEDF2)
+                    )
+
+                    // Navigation will be connected later
+                    ProfileMenuItem(
+                        symbol = "⚙",
+                        title = "Account Settings",
+                        onClick = onAccountSettingsClick
+                    )
+                }
+            }
+
+            // Logout button
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        showLogoutDialog = true
+                    },
+                shape = RoundedCornerShape(50.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.5.dp,
+                    PurplePrimary
+                )
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "⇥  Log Out",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = PurplePrimary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
         }
 
         if (showLogoutDialog) {
             AlertDialog(
-                onDismissRequest = { showLogoutDialog = false },
+                onDismissRequest = {
+                    showLogoutDialog = false
+                },
                 containerColor = Color.White,
                 title = {
                     Text(
@@ -226,7 +340,7 @@ fun ProfileScreen(
                 },
                 text = {
                     Text(
-                        text = "Your progress in this session will remain available when you sign back in.",
+                        text = "Are you sure you want to log out?",
                         fontSize = 13.sp,
                         color = TextMuted
                     )
@@ -242,21 +356,23 @@ fun ProfileScreen(
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(50),
-                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
-                    ) {
-                        Text(
-                            text = "Log out",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 14.sp
+                        contentPadding = PaddingValues(
+                            horizontal = 20.dp,
+                            vertical = 8.dp
                         )
+                    ) {
+                        Text("Log out")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showLogoutDialog = false }) {
+                    TextButton(
+                        onClick = {
+                            showLogoutDialog = false
+                        }
+                    ) {
                         Text(
                             text = "Cancel",
-                            color = TextMuted,
-                            fontSize = 14.sp
+                            color = TextMuted
                         )
                     }
                 }
@@ -266,88 +382,92 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileMenuCard(
-    badge: String,
-    title: String,
-    subtitle: String,
-    onClick: () -> Unit
+private fun ProfileStatCard(
+    value: String,
+    label: String,
+    modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        modifier = modifier.height(84.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(PurpleLightBg),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = badge,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = PurplePrimary
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(
-                        text = title,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextDark
-                    )
-                    Text(
-                        text = subtitle,
-                        fontSize = 12.sp,
-                        color = TextMuted
-                    )
-                }
-            }
             Text(
-                text = ">",
-                fontSize = 18.sp,
+                text = value,
+                fontSize = 25.sp,
                 fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+
+            Spacer(modifier = Modifier.height(3.dp))
+
+            Text(
+                text = label,
+                fontSize = 12.sp,
                 color = TextMuted
             )
         }
     }
 }
 
+@Composable
+private fun ProfileMenuItem(
+    symbol: String,
+    title: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(58.dp)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = symbol,
+            fontSize = 21.sp,
+            color = PurplePrimary,
+            modifier = Modifier.width(34.dp)
+        )
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Text(
+            text = title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Medium,
+            color = TextDark,
+            modifier = Modifier.weight(1f)
+        )
+
+        Text(
+            text = "›",
+            fontSize = 24.sp,
+            color = TextMuted
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen(
+    ProfileRoute(
         uiState = ProfileUiState(
-            fullName = "Preview User",
-            email = "user@loopit.app",
-            recycledDevicesCount = 0,
-            pointsCount = 0
-        ),
-        onHomeTabClick = {},
-        onMapTabClick = {},
-        onScanTabClick = {},
-        onRewardsTabClick = {},
-        onStatisticsClick = {},
-        onRecyclingHistoryClick = {},
-        onRewardsClick = {},
-        onAccessibilityClick = {},
-        onConfirmLogoutClick = {}
+            fullName = "Dalia Ahmed",
+            email = "user@example.com",
+            recycledDevicesCount = 4,
+            pointsCount = 390
+        )
     )
 }
