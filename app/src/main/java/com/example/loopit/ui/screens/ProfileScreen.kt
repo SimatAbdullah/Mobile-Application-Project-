@@ -1,6 +1,6 @@
-
 package com.example.loopit.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,8 +24,9 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,30 +56,37 @@ private val TextDark = Color(0xFF1A1A2E)
 private val TextMuted = Color(0xFF7A7A8C)
 private val BackgroundGray = Color(0xFFFAFAFC)
 
+private fun buildInitials(fullName: String): String {
+    val parts = fullName.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
+    return when {
+        parts.isEmpty() -> "U"
+        parts.size == 1 -> parts[0].take(2).uppercase()
+        else -> "${parts[0].take(1)}${parts[1].take(1)}".uppercase()
+    }
+}
+
 @Composable
 fun ProfileRoute(
+    modifier: Modifier = Modifier,
     uiState: ProfileUiState = ProfileUiState(),
     onHomeTabClick: () -> Unit = {},
     onMapTabClick: () -> Unit = {},
-    onScanTabClick: () -> Unit = {},
     onRewardsTabClick: () -> Unit = {},
-    onStatisticsClick: () -> Unit = {},
     onRecyclingHistoryClick: () -> Unit = {},
+    onYourImpactClick: () -> Unit = {},
     onRewardsClick: () -> Unit = {},
     onEditProfileClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onAccountSettingsClick: () -> Unit = {},
-    onConfirmLogoutClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    onConfirmLogoutClick: () -> Unit = {}
 ) {
     ProfileScreen(
         uiState = uiState,
         onHomeTabClick = onHomeTabClick,
         onMapTabClick = onMapTabClick,
-        onScanTabClick = onScanTabClick,
         onRewardsTabClick = onRewardsTabClick,
-        onStatisticsClick = onStatisticsClick,
         onRecyclingHistoryClick = onRecyclingHistoryClick,
+        onYourImpactClick = onYourImpactClick,
         onRewardsClick = onRewardsClick,
         onEditProfileClick = onEditProfileClick,
         onNotificationsClick = onNotificationsClick,
@@ -93,10 +101,9 @@ fun ProfileScreen(
     uiState: ProfileUiState,
     onHomeTabClick: () -> Unit,
     onMapTabClick: () -> Unit,
-    onScanTabClick: () -> Unit,
     onRewardsTabClick: () -> Unit,
-    onStatisticsClick: () -> Unit,
     onRecyclingHistoryClick: () -> Unit,
+    onYourImpactClick: () -> Unit,
     onRewardsClick: () -> Unit,
     onEditProfileClick: () -> Unit,
     onNotificationsClick: () -> Unit,
@@ -107,228 +114,197 @@ fun ProfileScreen(
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val displayName = uiState.fullName.ifBlank { "User" }
-    val displayEmail = uiState.email.ifBlank { "No email" }
-
-    val initials = displayName
-        .trim()
-        .split(Regex("\\s+"))
-        .filter { it.isNotBlank() }
-        .let { parts ->
-            when {
-                parts.isEmpty() -> "U"
-                parts.size == 1 -> parts[0].take(2).uppercase()
-                else -> (
-                        parts.first().take(1) +
-                                parts.last().take(1)
-                        ).uppercase()
-            }
-        }
+    val displayEmail = uiState.email.ifBlank { "" }
+    val initials = buildInitials(displayName)
 
     Scaffold(
         containerColor = BackgroundGray,
         bottomBar = {
-            LoopitBottomBar(
+            ProfileBottomBar(
                 selectedTab = "Profile",
                 onHomeClick = onHomeTabClick,
                 onMapClick = onMapTabClick,
-                onScanClick = onScanTabClick,
                 onRewardsClick = onRewardsTabClick,
                 onProfileClick = {}
             )
         },
         modifier = modifier
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    horizontal = 20.dp,
-                    vertical = 16.dp
-                ),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            // Page title
             Text(
                 text = "Profile",
-                fontSize = 20.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextDark,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 2.dp)
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Profile avatar
             Box(
                 modifier = Modifier
-                    .size(88.dp)
+                    .size(72.dp)
                     .clip(CircleShape)
                     .background(PurpleLightBg),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = initials,
-                    fontSize = 28.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = PurplePrimary
                 )
             }
 
-            // User information
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp)
             ) {
                 Text(
                     text = displayName,
-                    fontSize = 20.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextDark
                 )
-
-                Text(
-                    text = "✉  $displayEmail",
-                    fontSize = 13.sp,
-                    color = TextMuted
-                )
+                if (displayEmail.isNotBlank()) {
+                    Text(
+                        text = displayEmail,
+                        fontSize = 12.sp,
+                        color = TextMuted
+                    )
+                }
             }
 
-            // Statistics cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ProfileStatCard(
-                    value = uiState.recycledDevicesCount.toString(),
-                    label = "Devices recycled",
-                    modifier = Modifier.weight(1f)
-                )
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 14.dp, horizontal = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = "${uiState.recycledDevicesCount}",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PurplePrimary
+                        )
+                        Text(
+                            text = "Devices recycled",
+                            fontSize = 12.sp,
+                            color = TextMuted
+                        )
+                    }
+                }
 
-                ProfileStatCard(
-                    value = uiState.pointsCount.toString(),
-                    label = "Points",
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            // Profile options matching the approved design
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 2.dp
-                )
-            ) {
-                Column {
-
-                    ProfileMenuItem(
-                        symbol = "◷",
-                        title = "Recycling History",
-                        onClick = onRecyclingHistoryClick
-                    )
-
-                    HorizontalDivider(
-                        color = Color(0xFFEDEDF2)
-                    )
-
-                    ProfileMenuItem(
-                        symbol = "▥",
-                        title = "Your Impact",
-                        onClick = onStatisticsClick
-                    )
-
-                    HorizontalDivider(
-                        color = Color(0xFFEDEDF2)
-                    )
-
-                    ProfileMenuItem(
-                        symbol = "★",
-                        title = "Rewards",
-                        onClick = onRewardsClick
-                    )
-
-                    HorizontalDivider(
-                        color = Color(0xFFEDEDF2)
-                    )
-
-                    // Dalia's existing screen
-                    ProfileMenuItem(
-                        symbol = "✎",
-                        title = "Edit Profile",
-                        onClick = onEditProfileClick
-                    )
-
-                    HorizontalDivider(
-                        color = Color(0xFFEDEDF2)
-                    )
-
-                    // Navigation will be connected later
-                    ProfileMenuItem(
-                        symbol = "♧",
-                        title = "Notifications",
-                        onClick = onNotificationsClick
-                    )
-
-                    HorizontalDivider(
-                        color = Color(0xFFEDEDF2)
-                    )
-
-                    // Navigation will be connected later
-                    ProfileMenuItem(
-                        symbol = "⚙",
-                        title = "Account Settings",
-                        onClick = onAccountSettingsClick
-                    )
+                Card(
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 14.dp, horizontal = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Text(
+                            text = "${uiState.pointsCount}",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = PurplePrimary
+                        )
+                        Text(
+                            text = "Points",
+                            fontSize = 12.sp,
+                            color = TextMuted
+                        )
+                    }
                 }
             }
 
-            // Logout button
-            Card(
+            Spacer(modifier = Modifier.height(2.dp))
+
+            ProfileActionRow(
+                symbol = "↺",
+                title = "Recycling History",
+                onClick = onRecyclingHistoryClick
+            )
+
+            ProfileActionRow(
+                symbol = "▤",
+                title = "Your Impact",
+                onClick = onYourImpactClick
+            )
+
+            ProfileActionRow(
+                symbol = "★",
+                title = "Rewards",
+                onClick = onRewardsClick
+            )
+
+            ProfileActionRow(
+                symbol = "✎",
+                title = "Edit Profile",
+                onClick = onEditProfileClick
+            )
+
+            ProfileActionRow(
+                symbol = "🔔",
+                title = "Notifications",
+                onClick = onNotificationsClick
+            )
+
+            ProfileActionRow(
+                symbol = "⚙",
+                title = "Account Settings",
+                onClick = onAccountSettingsClick
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            OutlinedButton(
+                onClick = { showLogoutDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable {
-                        showLogoutDialog = true
-                    },
-                shape = RoundedCornerShape(50.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.5.dp,
-                    PurplePrimary
+                    .height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, PurplePrimary.copy(alpha = 0.4f)),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    containerColor = Color.White,
+                    contentColor = PurplePrimary
                 )
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "⇥  Log Out",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = PurplePrimary
-                    )
-                }
+                Text(
+                    text = "→ Log Out",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
-
-            Spacer(modifier = Modifier.height(4.dp))
         }
 
         if (showLogoutDialog) {
             AlertDialog(
-                onDismissRequest = {
-                    showLogoutDialog = false
-                },
+                onDismissRequest = { showLogoutDialog = false },
                 containerColor = Color.White,
                 title = {
                     Text(
@@ -340,7 +316,7 @@ fun ProfileScreen(
                 },
                 text = {
                     Text(
-                        text = "Are you sure you want to log out?",
+                        text = "Your session data for this account will remain available when you sign back in.",
                         fontSize = 13.sp,
                         color = TextMuted
                     )
@@ -356,23 +332,21 @@ fun ProfileScreen(
                             contentColor = Color.White
                         ),
                         shape = RoundedCornerShape(50),
-                        contentPadding = PaddingValues(
-                            horizontal = 20.dp,
-                            vertical = 8.dp
-                        )
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
                     ) {
-                        Text("Log out")
+                        Text(
+                            text = "Log out",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp
+                        )
                     }
                 },
                 dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showLogoutDialog = false
-                        }
-                    ) {
+                    TextButton(onClick = { showLogoutDialog = false }) {
                         Text(
                             text = "Cancel",
-                            color = TextMuted
+                            color = TextMuted,
+                            fontSize = 14.sp
                         )
                     }
                 }
@@ -382,38 +356,57 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileStatCard(
-    value: String,
-    label: String,
-    modifier: Modifier = Modifier
+private fun ProfileActionRow(
+    symbol: String,
+    title: String,
+    onClick: () -> Unit
 ) {
     Card(
-        modifier = modifier.height(84.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp
-        )
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(PurpleLightBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = symbol,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = PurplePrimary
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = TextDark
+                )
+            }
+
             Text(
-                text = value,
-                fontSize = 25.sp,
+                text = ">",
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextDark
-            )
-
-            Spacer(modifier = Modifier.height(3.dp))
-
-            Text(
-                text = label,
-                fontSize = 12.sp,
                 color = TextMuted
             )
         }
@@ -421,40 +414,66 @@ private fun ProfileStatCard(
 }
 
 @Composable
-private fun ProfileMenuItem(
-    symbol: String,
-    title: String,
+private fun ProfileBottomBar(
+    selectedTab: String,
+    onHomeClick: () -> Unit,
+    onMapClick: () -> Unit,
+    onRewardsClick: () -> Unit,
+    onProfileClick: () -> Unit
+) {
+    Surface(
+        color = Color.White,
+        shadowElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 10.dp, horizontal = 12.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            ProfileBottomTabItem(
+                label = "Home",
+                isSelected = selectedTab == "Home",
+                onClick = onHomeClick
+            )
+            ProfileBottomTabItem(
+                label = "Map",
+                isSelected = selectedTab == "Map",
+                onClick = onMapClick
+            )
+            ProfileBottomTabItem(
+                label = "Rewards",
+                isSelected = selectedTab == "Rewards",
+                onClick = onRewardsClick
+            )
+            ProfileBottomTabItem(
+                label = "Profile",
+                isSelected = selectedTab == "Profile",
+                onClick = onProfileClick
+            )
+        }
+    }
+}
+
+@Composable
+private fun ProfileBottomTabItem(
+    label: String,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Row(
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
-            .fillMaxWidth()
-            .height(58.dp)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
-            text = symbol,
-            fontSize = 21.sp,
-            color = PurplePrimary,
-            modifier = Modifier.width(34.dp)
-        )
-
-        Spacer(modifier = Modifier.width(10.dp))
-
-        Text(
-            text = title,
-            fontSize = 15.sp,
-            fontWeight = FontWeight.Medium,
-            color = TextDark,
-            modifier = Modifier.weight(1f)
-        )
-
-        Text(
-            text = "›",
-            fontSize = 24.sp,
-            color = TextMuted
+            text = label,
+            fontSize = 12.sp,
+            color = if (isSelected) PurplePrimary else TextMuted,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
         )
     }
 }
@@ -464,10 +483,10 @@ private fun ProfileMenuItem(
 fun ProfileScreenPreview() {
     ProfileRoute(
         uiState = ProfileUiState(
-            fullName = "Dalia Ahmed",
-            email = "user@example.com",
-            recycledDevicesCount = 4,
-            pointsCount = 390
+            fullName = "User",
+            email = "",
+            recycledDevicesCount = 0,
+            pointsCount = 0
         )
     )
 }
