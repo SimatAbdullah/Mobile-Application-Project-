@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-
+import com.example.loopit.ui.screens.YourImpactRoute
 import com.example.loopit.ui.screens.LoginScreen
 import com.example.loopit.ui.screens.CreateAccountScreen
 import com.example.loopit.ui.screens.ForgotPasswordScreen
@@ -74,31 +74,28 @@ fun AppNavGraph() {
         composable(Routes.HOME) {
             HomeRoute(
                 onNotificationsClick = {
-                    // Connect when Notifications is ready.
+                    // Connect Notifications later.
                 },
-                onRecordRecyclingClick = {
-                    // Connect when Record Recycling is ready.
+                onIdentifyDeviceClick = {
+                    // Connect Identify Device later.
                 },
-                onIdentifyClick = {
-                    // Connect when Identify Device is ready.
-                },
-                onPointsClick = {
-                    // Connect when Your Impact is registered.
-                },
-                onRewardsClick = {
-                    // Connect when Rewards is ready.
-                },
-                onChecklistClick = {
-                    // Connect checklist later.
+                onFindCollectionPointsClick = {
+                    // Connect Collection Points later.
                 },
                 onViewStatisticsClick = {
                     // Connect Your Impact later.
                 },
+                onEnvironmentalImpactClick = {
+                    // Connect Your Impact later.
+                },
+                onHomeTabClick = {
+                    // Already on Home.
+                },
                 onMapTabClick = {
                     // Connect Collection Points later.
                 },
-                onScanTabClick = {
-                    // Connect Identify Device later.
+                onRewardsTabClick = {
+                    // Connect Rewards later.
                 },
                 onProfileTabClick = {
                     navController.navigate(Routes.PROFILE) {
@@ -113,26 +110,20 @@ fun AppNavGraph() {
             ProfileRoute(
                 onHomeTabClick = {
                     navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) {
-                            inclusive = false
-                        }
                         launchSingleTop = true
                     }
                 },
                 onMapTabClick = {
                     // Connect Collection Points later.
                 },
-                onScanTabClick = {
-                    // Connect Identify Device later.
-                },
                 onRewardsTabClick = {
                     // Connect Rewards later.
                 },
-                onStatisticsClick = {
-                    // Connect Your Impact later.
-                },
                 onRecyclingHistoryClick = {
                     // Connect Miad's screen later.
+                },
+                onYourImpactClick = {
+                    // Connect Your Impact later.
                 },
                 onRewardsClick = {
                     // Connect Rewards later.
@@ -147,7 +138,6 @@ fun AppNavGraph() {
                     // Connect Account Settings later.
                 },
                 onConfirmLogoutClick = {
-                    // Navigation demo only.
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.HOME) {
                             inclusive = true
@@ -173,5 +163,14 @@ fun AppNavGraph() {
                 }
             )
         }
+        // 7. Your Impact - Reem
+        composable(Routes.YOUR_IMPACT) {
+            YourImpactRoute(
+                onBackClick = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
+
 }
