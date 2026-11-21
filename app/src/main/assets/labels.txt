@@ -1,0 +1,5 @@
+0 Smartphone
+1 Tablet
+2 Laptop
+3 Charger
+4 Accessories
