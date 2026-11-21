@@ -1,5 +1,7 @@
 package com.example.loopit.ui.screens
 
+
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material.icons.outlined.Stars
@@ -42,11 +45,11 @@ data class RecyclingConfirmationUiState(
 
 @Composable
 fun RecyclingConfirmationScreen(
-    modifier: Modifier = Modifier,
     uiState: RecyclingConfirmationUiState = RecyclingConfirmationUiState(),
     onViewHistoryClick: () -> Unit = {},
     onViewRewardsClick: () -> Unit = {},
     onBackToHomeClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     Scaffold(modifier = modifier.fillMaxSize()) { innerPadding ->
         Column(
