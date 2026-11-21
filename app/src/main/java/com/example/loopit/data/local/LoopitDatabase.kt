@@ -1,9 +1,12 @@
+
 package com.example.loopit.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 import com.example.loopit.data.local.entity.*
 import com.example.loopit.data.local.dao.*
@@ -20,7 +23,7 @@ import com.example.loopit.data.local.dao.*
         UserChallenge::class,
         CollectionPointDevice::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class LoopitDatabase : RoomDatabase() {
@@ -48,6 +51,22 @@ abstract class LoopitDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: LoopitDatabase? = null
 
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO Device
+                    (Id, Name, pointValue, DisposalGuidance, IconName)
+                    VALUES
+                    (6, 'Other Devices', 0,
+                     'Check whether your local recycling center accepts this device. Remove personal data where applicable and follow device-specific battery safety instructions before recycling.',
+                     'other')
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getDatabase(context: Context): LoopitDatabase {
 
             return INSTANCE ?: synchronized(this) {
@@ -57,6 +76,7 @@ abstract class LoopitDatabase : RoomDatabase() {
                     LoopitDatabase::class.java,
                     "loopit_database"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .addCallback(DatabaseSeeder)
                     .build()
                     .also { INSTANCE = it }
