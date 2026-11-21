@@ -1,3 +1,4 @@
+
 package com.example.loopit.data.local
 
 import androidx.room.RoomDatabase
@@ -39,7 +40,11 @@ object DatabaseSeeder : RoomDatabase.Callback() {
 
             (5, 'Accessories', 5,
              'Collect electronic accessories and take them to an appropriate recycling point.',
-             'accessories')
+             'accessories'),
+
+            (6, 'Other Devices', 0,
+             'Check whether your local recycling center accepts this device. Remove personal data where applicable and follow device-specific battery safety instructions before recycling.',
+             'other')
         """.trimIndent())
     }
 
