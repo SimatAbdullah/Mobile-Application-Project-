@@ -46,8 +46,6 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
 
-    implementation("androidx.navigation:navigation-compose:2.9.6")
-
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -63,17 +61,32 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+
+    // Google Maps and Location - Salam
+    implementation(libs.google.maps.compose)
+    implementation(libs.google.play.services.location)
+
     // Room Database
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // ML Kit General Image Labeling
+    // ViewModel and Lifecycle - Salam
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Coroutines - Salam
+    implementation(libs.kotlinx.coroutines.android)
+
+    // ML Kit General Image Labeling - Qunoot
     implementation("com.google.mlkit:image-labeling:17.0.9")
 
-    // ML Kit Custom Image Labeling
+    // ML Kit Custom Image Labeling - Qunoot
     implementation("com.google.mlkit:image-labeling-custom:17.0.3")
 
+    // LiteRT / TensorFlow Lite - Qunoot
     implementation("com.google.ai.edge.litert:litert:1.4.2")
 }
 
