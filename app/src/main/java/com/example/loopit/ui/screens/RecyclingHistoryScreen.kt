@@ -1,5 +1,6 @@
 package com.example.loopit.ui.screens
 
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -110,10 +111,10 @@ fun defaultHistoryRecords(): List<RecyclingRecordItem> = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecyclingHistoryScreen(
-    modifier: Modifier = Modifier,
     uiState: RecyclingHistoryUiState = RecyclingHistoryUiState(),
     onBackClick: () -> Unit = {},
     onItemClick: (RecyclingRecordItem) -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),

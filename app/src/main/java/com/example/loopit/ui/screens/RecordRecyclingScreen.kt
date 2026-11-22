@@ -52,6 +52,7 @@ object RecordRecyclingPalette {
     val PrimaryPurple = Color(0xFF504DCC)
     val SoftPurpleBg = Color(0xFFEEEDFC)
     val GoldAccent = Color(0xFFDF911A)
+    val SoftGoldBg = Color(0xFFFFF8EB)
     val RecErrorRed = Color(0xFFD73431)
     val BorderGray = Color(0xFFE6E6EC)
 }
