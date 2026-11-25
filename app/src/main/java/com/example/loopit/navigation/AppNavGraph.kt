@@ -37,11 +37,40 @@ import com.example.loopit.ui.screens.RecyclingHistoryScreen
 import com.example.loopit.ui.viewmodel.CollectionPointViewModel
 import com.example.loopit.ui.viewmodel.CollectionPointViewModelFactory
 
+// State management for storing and preserving the selected device
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+
+// Provide the selected device and collection point to the recycling screen
+import com.example.loopit.ui.screens.RecordRecyclingUiState
+
 @Composable
 fun AppNavGraph() {
 
     val navController = rememberNavController()
     val context = LocalContext.current
+
+    // Preserve the selected device type throughout the recycling flow
+    var selectedDeviceType by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    // Store the device selected for recycling
+    var recyclingDeviceName by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    // Store the selected collection point name
+    var recyclingPointName by rememberSaveable {
+        mutableStateOf<String?>(null)
+    }
+
+    // Store the devices accepted by the selected collection point
+    var recyclingDeviceOptions by rememberSaveable {
+        mutableStateOf(arrayListOf<String>())
+    }
 
     val collectionFactory = remember(context) {
         CollectionPointViewModelFactory(context)
@@ -51,8 +80,20 @@ fun AppNavGraph() {
         factory = collectionFactory
     )
 
+    // Clear previous recycling selections before starting a new flow
+    fun clearRecyclingSelection() {
+        selectedDeviceType = null
+        recyclingDeviceName = null
+        recyclingPointName = null
+        recyclingDeviceOptions = arrayListOf()
+    }
+
     // Bottom navigation
     fun openTab(route: String) {
+
+        // Clear previous recycling selections when switching tabs
+        clearRecyclingSelection()
+
         navController.navigate(route) {
             launchSingleTop = true
             restoreState = true
@@ -65,6 +106,10 @@ fun AppNavGraph() {
 
     // Return to Home without restoring old screens
     fun returnToHome() {
+
+        // Clear previous recycling data when returning to Home
+        clearRecyclingSelection()
+
         navController.navigate(Routes.HOME) {
             popUpTo(Routes.HOME) {
                 inclusive = false
@@ -76,6 +121,10 @@ fun AppNavGraph() {
     }
 
     fun logout() {
+
+        // Clear recycling selections when the user logs out
+        clearRecyclingSelection()
+
         navController.navigate(Routes.LOGIN) {
             popUpTo(Routes.LOGIN) {
                 inclusive = false
@@ -165,6 +214,10 @@ fun AppNavGraph() {
                     navController.navigate(Routes.NOTIFICATIONS)
                 },
                 onIdentifyDeviceClick = {
+
+                    // Start a new recycling flow without previous selections
+                    clearRecyclingSelection()
+
                     navController.navigate(Routes.IDENTIFY_DEVICE)
                 },
                 onFindCollectionPointsClick = {
@@ -259,6 +312,11 @@ fun AppNavGraph() {
                     navController.popBackStack()
                 },
                 onContinueToDisposalGuidance = { deviceType ->
+
+                    // Store the selected device for use in the recycling flow
+                    selectedDeviceType = deviceType
+
+                    // Navigate to the disposal guidance for the selected device
                     navController.navigate(
                         "${Routes.DISPOSAL_GUIDANCE}/${Uri.encode(deviceType)}"
                     )
@@ -296,7 +354,7 @@ fun AppNavGraph() {
             )
         }
 
-        // 11. Collection Points Map - Salam
+// 11. Collection Points Map - Salam
         composable(Routes.COLLECTION_POINTS) {
             CollectionMapScreen(
                 viewModel = collectionViewModel,
@@ -305,9 +363,17 @@ fun AppNavGraph() {
                         "${Routes.COLLECTION_POINT_DETAILS}/$pointId"
                     )
                 },
-                onHomeClick = {
-                    openTab(Routes.HOME)
+
+                // Return to the previous screen without clearing the selected device
+                onBackClick = {
+                    navController.popBackStack()
                 },
+
+                // Return directly to Home and clear the recycling flow
+                onHomeClick = {
+                    returnToHome()
+                },
+
                 onRewardsClick = {
                     openTab(Routes.REWARDS)
                 },
@@ -329,14 +395,49 @@ fun AppNavGraph() {
             if (pointId != null) {
                 CollectionPointDetailsScreen(
                     collectionPointId = pointId,
+
+                    // Pass the previously selected device to the details screen
+                    selectedDeviceType = selectedDeviceType,
+
                     viewModel = collectionViewModel,
                     onBackClick = {
                         navController.popBackStack()
                     },
-                    onRecycleClick = { _, _ ->
-                        navController.navigate(
-                            Routes.RECORD_RECYCLING
-                        )
+                    onRecycleClick = { selectedPointId, deviceId ->
+
+                        // Retrieve the selected collection point from the ViewModel
+                        val point = collectionViewModel.detailsUiState.value.collectionPoint
+
+                        // Find the selected device among the accepted devices
+                        val device = point?.acceptedDevices?.find {
+                            it.id == deviceId
+                        }
+
+                        // Validate the selected collection point and device
+                        if (point != null &&
+                            point.id == selectedPointId &&
+                            device != null
+                        ) {
+
+                            // Store the actual device and collection point names
+                            recyclingDeviceName = device.name
+                            recyclingPointName = point.name
+
+// Store only the devices accepted by this collection point
+                            recyclingDeviceOptions = ArrayList(
+                                point.acceptedDevices.map { it.name }
+                            )
+
+                            // Navigate to the recycling record screen
+                            navController.navigate(
+                                Routes.RECORD_RECYCLING
+                            )
+
+                        } else {
+
+                            // Prevent navigation if the selected data is invalid
+                            pending("Unable to retrieve recycling details.")
+                        }
                     },
                     onDirectionsClick = { _, _ ->
                         pending(
@@ -408,9 +509,18 @@ fun AppNavGraph() {
         // 16. Record Recycling - Miad
         composable(Routes.RECORD_RECYCLING) {
             RecordRecyclingScreen(
+
+                // Display the selected device, collection point and accepted devices
+                uiState = RecordRecyclingUiState(
+                    selectedDevice = recyclingDeviceName,
+                    collectionPoint = recyclingPointName.orEmpty(),
+                    deviceOptions = recyclingDeviceOptions
+                ),
+
                 onBackClick = {
                     navController.popBackStack()
                 },
+
                 onConfirmRecyclingClick = {
                         deviceName, _, points ->
 

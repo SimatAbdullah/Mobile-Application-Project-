@@ -27,11 +27,15 @@ private val DetailsPrimary = Color(0xFF504DCC)
 @Composable
 fun CollectionPointDetailsScreen(
     collectionPointId: Int,
+
+    // Receive the previously selected device type
+    selectedDeviceType: String? = null,
+
     viewModel: CollectionPointViewModel,
     onBackClick: () -> Unit,
     onRecycleClick: (Int, Int) -> Unit,
     onDirectionsClick: (Double, Double) -> Unit
-) {
+){
     val uiState by viewModel.detailsUiState
         .collectAsStateWithLifecycle()
 
@@ -94,6 +98,10 @@ fun CollectionPointDetailsScreen(
                     if (point != null) {
                         CollectionDetailsContent(
                             point = point,
+
+                            // Pass the selected device to the details content
+                            selectedDeviceType = selectedDeviceType,
+
                             onRecycleClick = onRecycleClick,
                             onDirectionsClick = onDirectionsClick
                         )
@@ -141,10 +149,18 @@ private fun CollectionDetailsHeader(
 @Composable
 private fun CollectionDetailsContent(
     point: CollectionPointWithDistance,
+
+    // Use the previously selected device when recycling
+    selectedDeviceType: String? = null,
+
     onRecycleClick: (Int, Int) -> Unit,
     onDirectionsClick: (Double, Double) -> Unit
 ) {
     var showDeviceDialog by remember(point.id) {
+        mutableStateOf(false)
+    }
+    // Control the unsupported device warning dialog
+    var showUnsupportedDeviceDialog by remember(point.id) {
         mutableStateOf(false)
     }
 
@@ -224,7 +240,31 @@ private fun CollectionDetailsContent(
 
         Button(
             onClick = {
-                showDeviceDialog = true
+
+                // Show device selection if no device was previously selected
+                if (selectedDeviceType.isNullOrBlank()) {
+                    showDeviceDialog = true
+                } else {
+
+                    // Check if the collection point accepts the selected device
+                    val matchedDevice = point.acceptedDevices.find { device ->
+                        device.name.equals(
+                            selectedDeviceType,
+                            ignoreCase = true
+                        )
+                    }
+
+                    if (matchedDevice != null) {
+
+                        // Continue with the previously selected device
+                        onRecycleClick(point.id, matchedDevice.id)
+
+                    } else {
+
+                        // Show a warning if the device is not accepted
+                        showUnsupportedDeviceDialog = true
+                    }
+                }
             },
             enabled = point.acceptedDevices.isNotEmpty(),
             modifier = Modifier
@@ -271,7 +311,35 @@ private fun CollectionDetailsContent(
             )
         }
     }
-
+// Show a warning when the selected device is not accepted
+// by the current collection point
+    if (showUnsupportedDeviceDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                showUnsupportedDeviceDialog = false
+            },
+            title = {
+                Text("Device Not Accepted")
+            },
+            text = {
+                Text(
+                    "This collection point does not accept $selectedDeviceType. Please choose another collection point."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showUnsupportedDeviceDialog = false
+                    }
+                ) {
+                    Text(
+                        text = "OK",
+                        color = DetailsPrimary
+                    )
+                }
+            }
+        )
+    }
     if (showDeviceDialog) {
         AlertDialog(
             onDismissRequest = {
