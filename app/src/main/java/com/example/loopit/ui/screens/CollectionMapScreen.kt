@@ -59,6 +59,10 @@ private val MapPurpleLight = Color(0xFFF3EFFE)
 fun CollectionMapScreen(
     viewModel: CollectionPointViewModel,
     onPointClick: (Int) -> Unit,
+
+    // Handle back navigation separately from Home
+    onBackClick: () -> Unit,
+
     onHomeClick: () -> Unit,
     onRewardsClick: () -> Unit,
     onProfileClick: () -> Unit
@@ -70,6 +74,10 @@ fun CollectionMapScreen(
         onSearchQueryChange = viewModel::updateSearchQuery,
         onRetry = viewModel::loadCollectionPoints,
         onPointClick = onPointClick,
+
+        // Pass the back navigation callback
+        onBackClick = onBackClick,
+
         onHomeClick = onHomeClick,
         onRewardsClick = onRewardsClick,
         onProfileClick = onProfileClick
@@ -82,6 +90,10 @@ private fun CollectionMapContent(
     onSearchQueryChange: (String) -> Unit,
     onRetry: () -> Unit,
     onPointClick: (Int) -> Unit,
+
+    // Separate back navigation from Home navigation
+    onBackClick: () -> Unit,
+
     onHomeClick: () -> Unit,
     onRewardsClick: () -> Unit,
     onProfileClick: () -> Unit
@@ -113,7 +125,8 @@ private fun CollectionMapContent(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clickable(onClick = onHomeClick),
+                        // Return to the previous screen
+                        .clickable(onClick = onBackClick),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -636,6 +649,10 @@ private fun CollectionMapPreview() {
             onSearchQueryChange = {},
             onRetry = {},
             onPointClick = {},
+
+// Preview callback for back navigation
+            onBackClick = {},
+
             onHomeClick = {},
             onRewardsClick = {},
             onProfileClick = {}
